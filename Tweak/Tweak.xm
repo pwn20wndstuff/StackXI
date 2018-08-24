@@ -159,11 +159,11 @@ static void fakeNotifications() {
     return nil;
 }
 
--(unsigned long long)sectionCount {
+-(NSUInteger)sectionCount {
     return 0;
 }
 
--(unsigned long long)rowCountForSectionIndex:(unsigned long long)arg1 {
+-(NSUInteger)rowCountForSectionIndex:(NSUInteger)arg1 {
     return 0;
 }
 
@@ -172,6 +172,20 @@ static void fakeNotifications() {
 }
 
 -(id)notificationRequestsAtIndexPaths:(id)arg1 {
+    return nil;
+}
+
+%end
+
+%hook NCNotificationChronologicalList
+
+-(id)removeNotificationRequest:(id)arg1 {
+    [priorityList insertNotificationRequest:(NCNotificationRequest *)arg1];
+    return nil;
+}
+
+-(id)insertNotificationRequest:(id)arg1 {
+    [priorityList removeNotificationRequest:(NCNotificationRequest *)arg1];
     return nil;
 }
 
@@ -259,14 +273,14 @@ static void fakeNotifications() {
     }
 }
 
--(unsigned long long)insertNotificationRequest:(NCNotificationRequest *)request {
+-(NSUInteger)insertNotificationRequest:(NCNotificationRequest *)request {
     request.shouldShow = true;
     [self.requests addObject:request];
     [self updateList];
     return 0;
 }
 
--(unsigned long long)removeNotificationRequest:(NCNotificationRequest *)request {
+-(NSUInteger)removeNotificationRequest:(NCNotificationRequest *)request {
     NSLog(@"[StackXI] remove");
     %orig;
     [self.requests removeObject:request];
@@ -296,11 +310,11 @@ static void fakeNotifications() {
     %orig;
 }
 
--(long long)numberOfSectionsInCollectionView:(id)arg1 {
+-(NSInteger)numberOfSectionsInCollectionView:(id)arg1 {
     return 1;
 }
 
--(long long)collectionView:(id)arg1 numberOfItemsInSection:(long long)arg2 {
+-(NSInteger)collectionView:(id)arg1 numberOfItemsInSection:(NSInteger)arg2 {
     if (arg2 != 0) {
         return 0;
     }
@@ -332,7 +346,7 @@ static void fakeNotifications() {
 
 -(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section > 0) {
-        return CGSizeMake(0,0);
+        return CGSizeZero;
     }
 
     CGSize orig = %orig;
