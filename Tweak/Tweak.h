@@ -601,6 +601,7 @@
 @property (assign,nonatomic) bool isStack;
 @property (assign,nonatomic) bool isExpanded;
 @property (assign,nonatomic) bool shouldShow;
+@property (assign,nonatomic) NSUInteger num;
 @property (nonatomic,retain) NSMutableOrderedSet *stackedNotificationRequests;
 @property (nonatomic,readonly) NCNotificationAction* clearAction; 
 

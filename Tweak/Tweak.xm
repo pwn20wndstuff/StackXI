@@ -95,6 +95,7 @@ static void fakeNotifications() {
 %property (assign,nonatomic) BOOL isStack;
 %property (assign,nonatomic) BOOL isExpanded;
 %property (assign,nonatomic) BOOL shouldShow;
+%property (assign,nonatomic) NSUInteger num;
 %property (nonatomic,retain) NSMutableOrderedSet *stackedNotificationRequests;
 
 -(id)init {
@@ -103,6 +104,7 @@ static void fakeNotifications() {
     self.shouldShow = false;
     self.isStack = false;
     self.isExpanded = false;
+    self.num = 0;
     return orig;
 }
 
@@ -219,6 +221,7 @@ static void fakeNotifications() {
 
     NSString *lastSection = nil;
     NCNotificationRequest *lastStack = nil;
+    NSUInteger num = 0;
 
     for (int i = 0; i < [self.requests count]; i++) {
         NCNotificationRequest *req = self.requests[i];
@@ -227,6 +230,9 @@ static void fakeNotifications() {
             req.isStack = false;
             req.shouldShow = false;
             req.isExpanded = false;
+
+            num++;
+            req.num = num;
 
             if ([expandedSection isEqualToString:req.bulletin.sectionID]) {
                 req.shouldShow = true;
@@ -238,6 +244,7 @@ static void fakeNotifications() {
 
                 req.shouldShow = true;
                 req.isStack = true;
+                num = 0;
                 if ([expandedSection isEqualToString:req.bulletin.sectionID]) {
                     req.isExpanded = true;
                 }
@@ -251,6 +258,7 @@ static void fakeNotifications() {
         } else {
             req.shouldShow = true;
             req.isStack = true;
+            num = 0;
         }
     }
 }
@@ -258,14 +266,13 @@ static void fakeNotifications() {
 -(NSUInteger)insertNotificationRequest:(NCNotificationRequest *)request {
     request.shouldShow = true;
     [self.requests addObject:request];
-    [self updateList];
+    [listCollectionView reloadData];
     return 0;
 }
 
 -(NSUInteger)removeNotificationRequest:(NCNotificationRequest *)request {
     %orig;
     [self.requests removeObject:request];
-    [self updateList];
     [listCollectionView reloadData];
     return 0;
 }
@@ -331,11 +338,17 @@ static void fakeNotifications() {
     NCNotificationListCell* cell = %orig;
     
     if (!cell.contentViewController.notificationRequest.shouldShow) {
-        cell.hidden = YES;
+        if (cell.contentViewController.notificationRequest.num > 3) {
+            cell.hidden = YES; 
+        } else {
+            cell.hidden = NO;
+            cell.frame = CGRectMake(cell.frame.origin.x + (10 * cell.contentViewController.notificationRequest.num), cell.frame.origin.y - 50, cell.frame.size.width - (20 * cell.contentViewController.notificationRequest.num), 50);
+        }
     } else {
         cell.hidden = NO;
     }
     
+    //[collectionView sendSubviewToBack:cell];
     return cell;
 }
 
@@ -362,19 +375,20 @@ static void fakeNotifications() {
 
 %hook NCNotificationListCell
 
-/*
+
 -(void)layoutSubviews {
-    %orig;
-    NSLog(@"[StackXI] SUBVIEWS!!!!");
+    /*//NSLog(@"[StackXI] SUBVIEWS!!!!");
     if (self.contentViewController.notificationRequest.isStack && !self.contentViewController.notificationRequest.isExpanded) {
-        NSLog(@"[StackXI] STACK CELL!!!!");
+        //NSLog(@"[StackXI] STACK CELL!!!!");
         [self.rightActionButtonsView.defaultActionButton setTitle: @"Clear All"];
         [self.rightActionButtonsView.defaultActionButton.titleLabel setText: @"Clear All"];
     } else {
         [self.rightActionButtonsView.defaultActionButton setTitle: @"Clear"];
         [self.rightActionButtonsView.defaultActionButton.titleLabel setText: @"Clear"];
-    }
-}*/
+    }*/
+    %orig;
+    [listCollectionView sendSubviewToBack:self];
+}
 
 -(void)cellClearButtonPressed:(id)arg1 {
     if (self.contentViewController.notificationRequest.isStack && !self.contentViewController.notificationRequest.isExpanded) {
@@ -399,6 +413,11 @@ static void fakeNotifications() {
     id orig = %orig;
     NSLog(@"[StackXI] shortlook view init");
     return orig;
+}
+
+-(void)viewWillAppear:(bool)whatever {
+    %orig;
+    [self updateBadge];
 }
 
 -(void)viewDidAppear:(bool)whatever {
@@ -426,6 +445,17 @@ static void fakeNotifications() {
     NCNotificationShortLookView *lv = (NCNotificationShortLookView *)MSHookIvar<UIView *>(self, "_lookView");
     if (lv && [lv _headerContentView] && [lv _headerContentView].titleLabel && [lv _headerContentView].titleLabel.textColor) {
         self.stackBadge.textColor = [[lv _headerContentView].titleLabel.textColor colorWithAlphaComponent:0.8];
+    }
+
+    if (lv) {
+        lv.customContentView.hidden = !self.notificationRequest.shouldShow;
+        [lv _headerContentView].hidden = !self.notificationRequest.shouldShow;
+
+        if (!self.notificationRequest.shouldShow) {
+            lv.alpha = 0.7;
+        } else {
+            lv.alpha = 1.0;
+        }
     }
 
     self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 10, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 20, 25);
@@ -486,6 +516,7 @@ static void fakeNotifications() {
         if (!c) continue;
 
         NCNotificationListCell* cell = (NCNotificationListCell*)c;
+        [self sendSubviewToBack:cell];
         [(NCNotificationShortLookViewController *)cell.contentViewController updateBadge];
     }
 }
@@ -536,7 +567,7 @@ static void fakeNotifications() {
                 continue;
             }
 
-            [self sendSubviewToBack:cell];
+            //[self sendSubviewToBack:cell];
 
             CGRect properFrame = cell.frame;
             cell.frame = frame;
