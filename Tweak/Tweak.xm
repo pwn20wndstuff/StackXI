@@ -119,7 +119,6 @@ static void fakeNotifications() {
         request.shouldShow = true;
     }
     
-    [listCollectionView reloadData];
     [listCollectionView openStack:self.bulletin.sectionID];
 }
 
@@ -351,6 +350,10 @@ static void fakeNotifications() {
         if (!request.shouldShow) {
             return CGSizeMake(orig.width,0);
         }
+
+        if (request.isStack && !request.isExpanded && [request.stackedNotificationRequests count] > 0) {
+            return CGSizeMake(orig.width,orig.height + 15);
+        }
     }
     return orig;
 }
@@ -412,17 +415,20 @@ static void fakeNotifications() {
 -(void)updateBadge {
     if (!self.stackBadge) {
         self.stackBadge = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + 10, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 20, 25)];
-        self.stackBadge.backgroundColor = [UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.5f];
-        self.stackBadge.textAlignment = NSTextAlignmentCenter;
-        [self.stackBadge setFont:[UIFont systemFontOfSize:14]];
+        [self.stackBadge setFont:[UIFont systemFontOfSize:12]];
         self.stackBadge.numberOfLines = 1;
         self.stackBadge.clipsToBounds = YES;
         self.stackBadge.hidden = YES;
-
+        self.stackBadge.textColor = [[UIColor blackColor] colorWithAlphaComponent:0.8];
         [self.view addSubview:self.stackBadge];
     }
 
-    self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 10, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 20, 25);
+    NCNotificationShortLookView *lv = (NCNotificationShortLookView *)MSHookIvar<UIView *>(self, "_lookView");
+    if (lv && [lv _headerContentView] && [lv _headerContentView].titleLabel && [lv _headerContentView].titleLabel.textColor) {
+        self.stackBadge.textColor = [[lv _headerContentView].titleLabel.textColor colorWithAlphaComponent:0.8];
+    }
+
+    self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 10, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 20, 25);
     [self.view bringSubviewToFront:self.stackBadge];
 
     UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:self.stackBadge.bounds byRoundingCorners:(UIRectCornerBottomLeft | UIRectCornerBottomRight) cornerRadii:CGSizeMake(8.0, 8.0)];
@@ -436,9 +442,9 @@ static void fakeNotifications() {
         self.stackBadge.hidden = NO;
         int count = [self.notificationRequest.stackedNotificationRequests count];
         if (count == 1) {
-            self.stackBadge.text = [NSString stringWithFormat:@"+%d notification", count];
+            self.stackBadge.text = [NSString stringWithFormat:@"%d more notification", count];
         } else {
-            self.stackBadge.text = [NSString stringWithFormat:@"+%d notifications", count];
+            self.stackBadge.text = [NSString stringWithFormat:@"%d more notifications", count];
         }
     } else {
         self.stackBadge.hidden = YES;

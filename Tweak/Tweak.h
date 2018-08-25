@@ -218,7 +218,7 @@
 -(bool)adjustsFontForContentSizeCategory;
 -(void)setDate:(NSDate*)arg1 ;
 -(void)setIcon:(UIImage*)arg1 ;
--(id)_titleLabel;
+-(UILabel*)_titleLabel;
 -(NSTimeZone*)timeZone;
 -(UIImage*)icon;
 -(void)setPreferredContentSizeCategory:(NSString*)arg1 ;
@@ -333,7 +333,7 @@
 -(void)setDateFormatStyle:(long long)arg1 ;
 -(id)utilityButton;
 -(void)_configureHeaderContentViewIfNecessary;
--(id)_headerContentView;
+-(MTPlatterHeaderContentView*)_headerContentView;
 -(void)setSashHidden:(bool)arg1 ;
 -(void)_configureHeaderContentView;
 @end
@@ -494,7 +494,7 @@
 -(id)_lazyThumbnailImageView;
 -(CGRect)_frameForThumbnailInRect:(CGRect)arg1 ;
 -(void)vibrantStylingDidChangeForProvider:(id)arg1 ;
--(id)_primaryLabel;
+-(UILabel*)_primaryLabel;
 -(id)_primarySubtitleLabel;
 -(id)_secondaryTextView;
 -(id)_outgoingPrimaryLabel;
@@ -558,7 +558,7 @@
 -(void)setPrimarySubtitleText:(NSString *)arg1 ;
 -(void)_configureNotificationContentViewIfNecessary;
 -(unsigned long long)messageNumberOfLines;
--(id)_notificationContentView;
+-(NCNotificationContentView*)_notificationContentView;
 -(id)_fontProvider;
 -(void)_setFontProvider:(id)arg1 ;
 -(void)_configureHeaderContentView;
