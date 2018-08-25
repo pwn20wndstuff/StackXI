@@ -361,7 +361,7 @@ static void fakeNotifications() {
     if (indexPath.section == 0) {
         NCNotificationRequest *request = [self.notificationPriorityList.requests objectAtIndex:indexPath.row];
         if (!request.shouldShow) {
-            return CGSizeMake(orig.width,0);
+            return CGSizeMake(orig.width,1);
         }
 
         if (request.isStack && !request.isExpanded && [request.stackedNotificationRequests count] > 0) {
