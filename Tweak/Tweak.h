@@ -605,7 +605,6 @@
 @property (nonatomic,readonly) NCNotificationAction* clearAction; 
 
 -(void)insertNotificationRequest:(NCNotificationRequest *)request;
--(void)removeNotificationRequest:(NCNotificationRequest *)request;
 -(void)expandStack;
 -(void)shrinkStack;
 

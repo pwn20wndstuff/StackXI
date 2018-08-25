@@ -112,15 +112,6 @@ static void fakeNotifications() {
 }
 
 %new
--(void)removeNotificationRequest:(NCNotificationRequest *)request {
-    if (request == self) {
-        //do some magic i guess
-    }
-
-    [self.stackedNotificationRequests removeObject:request];
-}
-
-%new
 -(void)expandStack {
     self.isExpanded = true;
 
@@ -202,14 +193,6 @@ static void fakeNotifications() {
 
 %new
 -(void)updateList {
-    if (clvc) {
-        for (NCNotificationRequest* req in [clvc allNotificationRequests]) {
-            if (req && req.bulletin) {
-                [self.requests addObject: req];
-            }
-        }
-    }
-
     [self.requests sortUsingComparator:(NSComparator)^(id obj1, id obj2){
         // TODO: improve sorting logic!
         // i.e. sort also by last date (some magic idk w/e)
@@ -281,10 +264,8 @@ static void fakeNotifications() {
 }
 
 -(NSUInteger)removeNotificationRequest:(NCNotificationRequest *)request {
-    NSLog(@"[StackXI] remove");
     %orig;
     [self.requests removeObject:request];
-    [[clvc allNotificationRequests] removeObject:request];
     [self updateList];
     [listCollectionView reloadData];
     return 0;
@@ -357,23 +338,6 @@ static void fakeNotifications() {
         }
     }
     return orig;
-}
-
--(void)removeNotificationRequest:(NCNotificationRequest *)arg1 forCoalescedNotification:(id)arg2 {
-    NSLog(@"[StackXI] removeeee");
-    [priorityList removeNotificationRequest:arg1];
-}
-
--(void)removeNotificationRequestsInNotificationHistorySection:(id)arg1 {
-    NSLog(@"[StackXI] removeeeee 2222");
-}
-
--(void)removeNotificationRequestsInIncomingSection:(id)arg1 {
-    NSLog(@"[StackXI] removeeeee 22223");
-}
-
--(void)removeNotificationRequestFromRecentsSection:(id)arg1 forCoalescedNotification:(id)arg2 {
-    NSLog(@"[StackXI] removeee again");
 }
 
 %end
@@ -457,9 +421,9 @@ static void fakeNotifications() {
         self.stackBadge.hidden = NO;
         int count = [self.notificationRequest.stackedNotificationRequests count];
         if (count == 1) {
-            self.stackBadge.text = [NSString stringWithFormat:@"+%d more notification", count];
+            self.stackBadge.text = [NSString stringWithFormat:@"+%d notification", count];
         } else {
-            self.stackBadge.text = [NSString stringWithFormat:@"+%d more notifications", count];
+            self.stackBadge.text = [NSString stringWithFormat:@"+%d notifications", count];
         }
     } else {
         self.stackBadge.hidden = YES;
