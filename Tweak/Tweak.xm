@@ -101,7 +101,7 @@ static void fakeNotifications() {
 -(id)init {
     id orig = %orig;
     self.stackedNotificationRequests = [[NSMutableOrderedSet alloc] init];
-    self.shouldShow = false;
+    self.shouldShow = true;
     self.isStack = false;
     self.isExpanded = false;
     self.num = 0;
@@ -202,7 +202,7 @@ static void fakeNotifications() {
         NCNotificationRequest *b = (NCNotificationRequest *)obj2;
 
         if ([a.bulletin.sectionID isEqualToString:b.bulletin.sectionID]) {
-            return [a.bulletin.date compare:b.bulletin.date];
+            return [b.bulletin.date compare:a.bulletin.date];
         }
 
         return [a.bulletin.sectionID localizedStandardCompare:b.bulletin.sectionID];
