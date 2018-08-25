@@ -459,17 +459,10 @@ static void fakeNotifications() {
     }
 
     self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 21, 25);
-    [self.view bringSubviewToFront:self.stackBadge];
-
-    UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:self.stackBadge.bounds byRoundingCorners:(UIRectCornerBottomLeft | UIRectCornerBottomRight) cornerRadii:CGSizeMake(8.0, 8.0)];
-
-    CAShapeLayer *maskLayer = [[CAShapeLayer alloc] init];
-    maskLayer.frame = self.stackBadge.bounds;
-    maskLayer.path  = maskPath.CGPath;
-    self.stackBadge.layer.mask = maskLayer;
 
     if (self.notificationRequest.isStack && !self.notificationRequest.isExpanded && [self.notificationRequest.stackedNotificationRequests count] > 0) {
         self.stackBadge.hidden = NO;
+        self.stackBadge.alpha = 1.0;
         int count = [self.notificationRequest.stackedNotificationRequests count];
         if (count == 1) {
             self.stackBadge.text = [NSString stringWithFormat:@"%d more notification", count];
@@ -478,7 +471,10 @@ static void fakeNotifications() {
         }
     } else {
         self.stackBadge.hidden = YES;
+        self.stackBadge.alpha = 0.0;
     }
+
+    [self.view bringSubviewToFront:self.stackBadge];
 }
 
 - (void)_handleTapOnView:(id)arg1 {
