@@ -271,6 +271,21 @@ static void fakeNotifications() {
     return 0;
 }
 
+-(id)clearNonPersistentRequests {
+    return %orig;
+}
+
+-(id)clearRequestsPassingTest:(id)arg1 {
+    //it removes notifications on unlock/lock :c
+    //so i had to disable this
+    return nil;
+}
+
+-(id)clearAllRequests {
+    //not sure if i want this working too :D
+    return nil;
+}
+
 %end
 
 %hook NCNotificationCombinedListViewController
@@ -575,7 +590,7 @@ static void displayStatusChanged(CFNotificationCenterRef center, void *observer,
 %ctor{
     HBPreferences *file = [[HBPreferences alloc] initWithIdentifier:@"io.ominousness.stackxi"];
     bool enabled = [([file objectForKey:@"Enabled"] ?: @(YES)) boolValue];
-    bool debug = false;
+    bool debug = true;
 
     if (enabled) {
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, displayStatusChanged, CFSTR("com.apple.iokit.hid.displayStatus"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
