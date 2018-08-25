@@ -387,7 +387,9 @@ static void fakeNotifications() {
         [self.rightActionButtonsView.defaultActionButton.titleLabel setText: @"Clear"];
     }*/
     %orig;
-    [listCollectionView sendSubviewToBack:self];
+    if (!self.contentViewController.notificationRequest.isStack) {
+        [listCollectionView sendSubviewToBack:self];
+    }
 }
 
 -(void)cellClearButtonPressed:(id)arg1 {
@@ -443,8 +445,8 @@ static void fakeNotifications() {
     }
 
     NCNotificationShortLookView *lv = (NCNotificationShortLookView *)MSHookIvar<UIView *>(self, "_lookView");
-    if (lv && [lv _headerContentView] && [lv _headerContentView].titleLabel && [lv _headerContentView].titleLabel.textColor) {
-        self.stackBadge.textColor = [[lv _headerContentView].titleLabel.textColor colorWithAlphaComponent:0.8];
+    if (lv && [lv _notificationContentView] && [lv _notificationContentView].primaryLabel && [lv _notificationContentView].primaryLabel.textColor) {
+        self.stackBadge.textColor = [[lv _notificationContentView].primaryLabel.textColor colorWithAlphaComponent:0.8];
     }
 
     if (lv) {

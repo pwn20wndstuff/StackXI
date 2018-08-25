@@ -409,6 +409,7 @@
 
 }
 
+@property (setter=_setPrimaryLabel:,getter=_primaryLabel,nonatomic,retain) UILabel * primaryLabel;
 @property (nonatomic,retain) NSString * primaryText; 
 @property (nonatomic,retain) NSString * primarySubtitleText; 
 @property (nonatomic,retain) NSString * secondaryText; 
@@ -475,7 +476,7 @@
 -(id)_newPrimaryLabel;
 -(void)_updateStyleForPrimaryLabel:(id)arg1 withStyle:(long long)arg2 ;
 -(void)_clearCacheForFont:(id)arg1 ;
--(void)_setPrimaryLabel:(id)arg1 ;
+-(void)_setPrimaryLabel:(UILabel *)arg1 ;
 -(id)_lazyOutgoingPrimaryLabel;
 -(void)_setOutgoingPrimaryLabel:(id)arg1 ;
 -(void)_setText:(id)arg1 withFinalLabel:(id)arg2 setter:(/*^block*/id)arg3 andTransitionLabel:(id)arg4 setter:(/*^block*/id)arg5 ;
