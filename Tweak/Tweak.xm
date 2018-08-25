@@ -433,7 +433,7 @@ static void fakeNotifications() {
 %new
 -(void)updateBadge {
     if (!self.stackBadge) {
-        self.stackBadge = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + 10, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 20, 25)];
+        self.stackBadge = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 21, 25)];
         [self.stackBadge setFont:[UIFont systemFontOfSize:12]];
         self.stackBadge.numberOfLines = 1;
         self.stackBadge.clipsToBounds = YES;
@@ -458,7 +458,7 @@ static void fakeNotifications() {
         }
     }
 
-    self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 10, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 20, 25);
+    self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 21, 25);
     [self.view bringSubviewToFront:self.stackBadge];
 
     UIBezierPath *maskPath = [UIBezierPath bezierPathWithRoundedRect:self.stackBadge.bounds byRoundingCorners:(UIRectCornerBottomLeft | UIRectCornerBottomRight) cornerRadii:CGSizeMake(8.0, 8.0)];
@@ -627,7 +627,7 @@ static void displayStatusChanged(CFNotificationCenterRef center, void *observer,
 %ctor{
     HBPreferences *file = [[HBPreferences alloc] initWithIdentifier:@"io.ominousness.stackxi"];
     bool enabled = [([file objectForKey:@"Enabled"] ?: @(YES)) boolValue];
-    bool debug = true;
+    bool debug = false;
 
     if (enabled) {
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, displayStatusChanged, CFSTR("com.apple.iokit.hid.displayStatus"), NULL, CFNotificationSuspensionBehaviorDeliverImmediately);
