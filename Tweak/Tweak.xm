@@ -41,6 +41,23 @@ static void fakeNotifications() {
     fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
     fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
     fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
+    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
     fakeNotification(@"com.apple.Music", [NSDate date]);
     fakeNotification(@"com.apple.Music", [NSDate date]);
     fakeNotification(@"com.apple.mobilephone", [NSDate date]);
@@ -140,16 +157,6 @@ static void fakeNotifications() {
 
 
 %hook NCNotificationSectionList
-
--(id)removeNotificationRequest:(id)arg1 {
-    [priorityList insertNotificationRequest:(NCNotificationRequest *)arg1];
-    return nil;
-}
-
--(id)insertNotificationRequest:(id)arg1 {
-    [priorityList removeNotificationRequest:(NCNotificationRequest *)arg1];
-    return nil;
-}
 
 -(NSUInteger)sectionCount {
     return 0;
@@ -362,7 +369,11 @@ static void fakeNotifications() {
     if (indexPath.section == 0) {
         NCNotificationRequest *request = [self.notificationPriorityList.requests objectAtIndex:indexPath.row];
         if (!request.shouldShow) {
-            return CGSizeMake(orig.width,1);
+            if (request.num > 3) {
+                return CGSizeMake(orig.width,0);
+            } else {
+                return CGSizeMake(orig.width,1);
+            }
         }
 
         if (request.isStack && !request.isExpanded && [request.stackedNotificationRequests count] > 0) {
@@ -441,6 +452,7 @@ static void fakeNotifications() {
         self.stackBadge.numberOfLines = 1;
         self.stackBadge.clipsToBounds = YES;
         self.stackBadge.hidden = YES;
+        self.stackBadge.alpha = 0.0;
         self.stackBadge.textColor = [[UIColor blackColor] colorWithAlphaComponent:0.8];
         [self.view addSubview:self.stackBadge];
     }
@@ -611,6 +623,24 @@ static void fakeNotifications() {
 -(void)performBatchUpdates:(id)updates completion:(void (^)(bool finished))completion {
 	[self reloadData];
 	if (completion) completion(true);
+}
+
+%end
+
+%hook NCNotificationListCollectionViewFlowLayout
+
+- (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
+	NSArray *attrs =  %orig;
+
+    for (UICollectionViewLayoutAttributes *attr in attrs) {
+        if (attr.size.height == 0) {
+            attr.hidden = YES;
+        } else {
+            attr.hidden = NO;
+        }
+    }
+
+    return attrs;
 }
 
 %end

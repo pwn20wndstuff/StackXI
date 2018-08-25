@@ -743,4 +743,6 @@
 
 @interface NCNotificationListCollectionViewFlowLayout : UICollectionViewFlowLayout
 
+-(id)initialLayoutAttributesForAppearingItemAtIndexPath:(id)arg1;
+
 @end
