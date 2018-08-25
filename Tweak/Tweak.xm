@@ -342,13 +342,14 @@ static void fakeNotifications() {
             cell.hidden = YES; 
         } else {
             cell.hidden = NO;
-            cell.frame = CGRectMake(cell.frame.origin.x + (10 * cell.contentViewController.notificationRequest.num), cell.frame.origin.y - 50, cell.frame.size.width - (20 * cell.contentViewController.notificationRequest.num), 50);
+            if (cell.frame.size.height != 50) {
+                cell.frame = CGRectMake(cell.frame.origin.x + (10 * cell.contentViewController.notificationRequest.num), cell.frame.origin.y - 50, cell.frame.size.width - (20 * cell.contentViewController.notificationRequest.num), 50);
+            }
         }
     } else {
         cell.hidden = NO;
     }
     
-    //[collectionView sendSubviewToBack:cell];
     return cell;
 }
 
