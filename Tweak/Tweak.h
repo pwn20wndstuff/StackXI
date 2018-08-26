@@ -621,6 +621,8 @@
 
 @interface NCNotificationShortLookViewController : NCNotificationViewController
 @property (nonatomic, retain) UILabel* stackBadge;
+@property (nonatomic, retain) UIButton* sxiClearAllButton;
+@property (nonatomic, retain) UIButton* sxiCollapseButton;
 
 -(void)_handleTapOnView:(id)arg1 ;
 -(id)_initWithNotificationRequest:(id)arg1 revealingAdditionalContentOnPresentation:(BOOL)arg2 ;
@@ -628,6 +630,8 @@
 -(void)_setupStaticContentProvider;
 -(void)_updateWithProvidedStaticContent;
 -(void)updateBadge;
+-(void)sxiCollapse:(UIButton *)button;
+-(void)sxiClearAll:(UIButton *)button;
 
 @end
 

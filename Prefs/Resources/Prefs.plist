@@ -26,6 +26,20 @@
 			<key>alternateColors</key>
 			<true/>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>io.ominousness.stackxi</string>
+			<key>label</key>
+			<string>Show "Collapse" / "Clear All" buttons</string>
+			<key>key</key>
+			<string>ShowButtons</string>
+			<key>alternateColors</key>
+			<true/>
+		</dict>
 
 		<!-- Credits -->
 		<dict>

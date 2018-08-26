@@ -10,6 +10,7 @@ static BBServer *bbServer = nil;
 static NCNotificationPriorityList *priorityList = nil;
 static NCNotificationListCollectionView *listCollectionView = nil;
 static NCNotificationCombinedListViewController *clvc = nil;
+static bool showButtons = false;
 
 UIImage * imageWithView(UIView *view) {
     UIGraphicsBeginImageContextWithOptions(view.bounds.size, view.opaque, 0.0);
@@ -37,29 +38,10 @@ static void fakeNotification(NSString *sectionID, NSDate *date) {
 }
 
 static void fakeNotifications() {
-    fakeNotification(@"com.apple.Music", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
-    fakeNotification(@"com.apple.Music", [NSDate date]);
-    fakeNotification(@"com.apple.Music", [NSDate date]);
+    fakeNotification(@"com.apple.mobilephone", [NSDate date]);
+    fakeNotification(@"com.apple.mobilephone", [NSDate date]);
+    fakeNotification(@"com.apple.mobilephone", [NSDate date]);
+    fakeNotification(@"com.apple.mobilephone", [NSDate date]);
     fakeNotification(@"com.apple.mobilephone", [NSDate date]);
     fakeNotification(@"com.apple.Music", [NSDate date]);
     fakeNotification(@"com.apple.MobileSMS", [NSDate date]);
@@ -432,6 +414,8 @@ static void fakeNotifications() {
 %hook NCNotificationShortLookViewController
 
 %property (retain) UILabel* stackBadge;
+%property (retain) UIButton* sxiClearAllButton;
+%property (retain) UIButton* sxiCollapseButton;
 
 -(id)init {
     id orig = %orig;
@@ -455,6 +439,24 @@ static void fakeNotifications() {
 }
 
 %new
+-(void)sxiCollapse:(UIButton *)button {
+    [self.notificationRequest shrinkStack];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, TEMPDURATION * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [listCollectionView reloadData];
+    });
+}
+
+%new
+-(void)sxiClearAll:(UIButton *)button {
+    for (NCNotificationRequest *request in self.notificationRequest.stackedNotificationRequests) {
+        [request.clearAction.actionRunner executeAction:request.clearAction fromOrigin:self withParameters:nil completion:nil];
+    }
+    
+    [self.notificationRequest.clearAction.actionRunner executeAction:self.notificationRequest.clearAction fromOrigin:self withParameters:nil completion:nil];
+    [listCollectionView reloadData];
+}
+
+%new
 -(void)updateBadge {
     if (!self.stackBadge) {
         self.stackBadge = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 21, 25)];
@@ -465,6 +467,39 @@ static void fakeNotifications() {
         self.stackBadge.alpha = 0.0;
         self.stackBadge.textColor = [[UIColor blackColor] colorWithAlphaComponent:0.8];
         [self.view addSubview:self.stackBadge];
+
+        if (showButtons) {
+            self.sxiClearAllButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + self.view.frame.size.width - 165, self.view.frame.origin.y + 5, 75, 25)];
+            [self.sxiClearAllButton.titleLabel setFont:[UIFont systemFontOfSize:12]];
+            self.sxiClearAllButton.hidden = YES;
+            self.sxiClearAllButton.alpha = 0.0;
+            [self.sxiClearAllButton setTitle:@"Clear All" forState: UIControlStateNormal];
+            self.sxiClearAllButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.6];
+            [self.sxiClearAllButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            self.sxiClearAllButton.layer.masksToBounds = true;
+            self.sxiClearAllButton.layer.cornerRadius = 12.5;
+
+            self.sxiCollapseButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + self.view.frame.size.width - 80, self.view.frame.origin.y + 5, 75, 25)];
+            [self.sxiCollapseButton.titleLabel setFont:[UIFont systemFontOfSize:12]];
+            self.sxiCollapseButton.hidden = YES;
+            self.sxiCollapseButton.alpha = 0.0;
+            [self.sxiCollapseButton setTitle:@"Collapse" forState:UIControlStateNormal];
+            self.sxiCollapseButton.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.6];
+            [self.sxiCollapseButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            self.sxiCollapseButton.layer.masksToBounds = true;
+            self.sxiCollapseButton.layer.cornerRadius = 12.5;
+            
+            [self.sxiClearAllButton addTarget:self action:@selector(sxiClearAll:) forControlEvents:UIControlEventTouchUpInside];
+            [self.sxiCollapseButton addTarget:self action:@selector(sxiCollapse:) forControlEvents:UIControlEventTouchUpInside];
+            
+            [self.view addSubview:self.sxiClearAllButton];
+            [self.view addSubview:self.sxiCollapseButton];
+        }
+    }
+
+    if (showButtons) {
+        [self.view bringSubviewToFront:self.sxiClearAllButton];
+        [self.view bringSubviewToFront:self.sxiCollapseButton];
     }
 
     NCNotificationShortLookView *lv = (NCNotificationShortLookView *)MSHookIvar<UIView *>(self, "_lookView");
@@ -484,19 +519,38 @@ static void fakeNotifications() {
     }
 
     self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 21, 25);
+    self.stackBadge.hidden = YES;
+    self.stackBadge.alpha = 0.0;
 
-    if ([NSStringFromClass([self.view.superview class]) isEqualToString:@"UIView"] && self.notificationRequest.isStack && !self.notificationRequest.isExpanded && [self.notificationRequest.stackedNotificationRequests count] > 0) {
-        self.stackBadge.hidden = NO;
-        self.stackBadge.alpha = 1.0;
-        int count = [self.notificationRequest.stackedNotificationRequests count];
-        if (count == 1) {
-            self.stackBadge.text = [NSString stringWithFormat:@"%d more notification", count];
-        } else {
-            self.stackBadge.text = [NSString stringWithFormat:@"%d more notifications", count];
+    if (showButtons) {
+        self.sxiClearAllButton.frame = CGRectMake(self.view.frame.origin.x + self.view.frame.size.width - 165, self.view.frame.origin.y + 5, 75, 25);
+        self.sxiCollapseButton.frame = CGRectMake(self.view.frame.origin.x + self.view.frame.size.width - 80, self.view.frame.origin.y + 5, 75, 25);
+
+        self.sxiClearAllButton.hidden = YES;
+        self.sxiClearAllButton.alpha = 0.0;
+
+        self.sxiCollapseButton.hidden = YES;
+        self.sxiCollapseButton.alpha = 0.0;
+    }
+
+    if ([NSStringFromClass([self.view.superview class]) isEqualToString:@"UIView"] && self.notificationRequest.isStack && [self.notificationRequest.stackedNotificationRequests count] > 0) {
+        if (!self.notificationRequest.isExpanded) {
+            self.stackBadge.hidden = NO;
+            self.stackBadge.alpha = 1.0;
+
+            int count = [self.notificationRequest.stackedNotificationRequests count];
+            if (count == 1) {
+                self.stackBadge.text = [NSString stringWithFormat:@"%d more notification", count];
+            } else {
+                self.stackBadge.text = [NSString stringWithFormat:@"%d more notifications", count];
+            }
+        } else if (showButtons) {
+            self.sxiClearAllButton.hidden = NO;
+            self.sxiClearAllButton.alpha = 1.0;
+
+            self.sxiCollapseButton.hidden = NO;
+            self.sxiCollapseButton.alpha = 1.0;
         }
-    } else {
-        self.stackBadge.hidden = YES;
-        self.stackBadge.alpha = 0.0;
     }
 
     [self.view bringSubviewToFront:self.stackBadge];
@@ -666,6 +720,7 @@ static void displayStatusChanged(CFNotificationCenterRef center, void *observer,
 %ctor{
     HBPreferences *file = [[HBPreferences alloc] initWithIdentifier:@"io.ominousness.stackxi"];
     bool enabled = [([file objectForKey:@"Enabled"] ?: @(YES)) boolValue];
+    showButtons = [([file objectForKey:@"ShowButtons"] ?: @(NO)) boolValue];
     bool debug = false;
 
     if (enabled) {
