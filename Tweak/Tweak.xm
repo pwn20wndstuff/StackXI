@@ -158,6 +158,16 @@ static void fakeNotifications() {
 
 %hook NCNotificationSectionList
 
+-(id)removeNotificationRequest:(id)arg1 {
+    [priorityList removeNotificationRequest:(NCNotificationRequest *)arg1];
+    return nil;
+}
+
+-(id)insertNotificationRequest:(id)arg1 {
+    [priorityList insertNotificationRequest:(NCNotificationRequest *)arg1];
+    return nil;
+}
+
 -(NSUInteger)sectionCount {
     return 0;
 }
@@ -179,12 +189,12 @@ static void fakeNotifications() {
 %hook NCNotificationChronologicalList
 
 -(id)removeNotificationRequest:(id)arg1 {
-    [priorityList insertNotificationRequest:(NCNotificationRequest *)arg1];
+    [priorityList removeNotificationRequest:(NCNotificationRequest *)arg1];
     return nil;
 }
 
 -(id)insertNotificationRequest:(id)arg1 {
-    [priorityList removeNotificationRequest:(NCNotificationRequest *)arg1];
+    [priorityList insertNotificationRequest:(NCNotificationRequest *)arg1];
     return nil;
 }
 
@@ -237,9 +247,7 @@ static void fakeNotifications() {
             req.isStack = false;
             req.shouldShow = false;
             req.isExpanded = false;
-
-            num++;
-            req.num = num;
+            req.num = ++num;
 
             if ([expandedSection isEqualToString:req.bulletin.sectionID]) {
                 req.shouldShow = true;
@@ -251,6 +259,7 @@ static void fakeNotifications() {
 
                 req.shouldShow = true;
                 req.isStack = true;
+                req.num = 0;
                 num = 0;
                 if ([expandedSection isEqualToString:req.bulletin.sectionID]) {
                     req.isExpanded = true;
@@ -265,7 +274,8 @@ static void fakeNotifications() {
         } else {
             req.shouldShow = true;
             req.isStack = true;
-            num = 0;
+            req.isExpanded = false;
+            req.num = 0;
         }
     }
 }
