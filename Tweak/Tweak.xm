@@ -485,7 +485,7 @@ static void fakeNotifications() {
 
     self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 21, 25);
 
-    if (self.notificationRequest.isStack && !self.notificationRequest.isExpanded && [self.notificationRequest.stackedNotificationRequests count] > 0) {
+    if ([NSStringFromClass([self.view.superview class]) isEqualToString:@"UIView"] && self.notificationRequest.isStack && !self.notificationRequest.isExpanded && [self.notificationRequest.stackedNotificationRequests count] > 0) {
         self.stackBadge.hidden = NO;
         self.stackBadge.alpha = 1.0;
         int count = [self.notificationRequest.stackedNotificationRequests count];
