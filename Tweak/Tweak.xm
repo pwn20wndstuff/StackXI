@@ -91,48 +91,48 @@ static void fakeNotifications() {
 
 %hook NCNotificationRequest
 
-%property (assign,nonatomic) BOOL isStack;
-%property (assign,nonatomic) BOOL isExpanded;
-%property (assign,nonatomic) BOOL shouldShow;
-%property (assign,nonatomic) NSUInteger num;
-%property (nonatomic,retain) NSMutableOrderedSet *stackedNotificationRequests;
+%property (assign,nonatomic) BOOL sxiIsStack;
+%property (assign,nonatomic) BOOL sxiIsExpanded;
+%property (assign,nonatomic) BOOL sxiVisible;
+%property (assign,nonatomic) NSUInteger sxiPositionInStack;
+%property (nonatomic,retain) NSMutableOrderedSet *sxiStackedNotificationRequests;
 
 -(id)init {
     id orig = %orig;
-    self.stackedNotificationRequests = [[NSMutableOrderedSet alloc] init];
-    self.shouldShow = true;
-    self.isStack = false;
-    self.isExpanded = false;
-    self.num = 0;
+    self.sxiStackedNotificationRequests = [[NSMutableOrderedSet alloc] init];
+    self.sxiVisible = true;
+    self.sxiIsStack = false;
+    self.sxiIsExpanded = false;
+    self.sxiPositionInStack = 0;
     return orig;
 }
 
 %new
--(void)insertNotificationRequest:(NCNotificationRequest *)request {
-    [self.stackedNotificationRequests addObject:request];
+-(void)sxiInsertRequest:(NCNotificationRequest *)request {
+    [self.sxiStackedNotificationRequests addObject:request];
 }
 
 %new
--(void)expandStack {
-    self.isExpanded = true;
+-(void)sxiExpand {
+    self.sxiIsExpanded = true;
 
-    for (NCNotificationRequest *request in self.stackedNotificationRequests) {
-        request.shouldShow = true;
+    for (NCNotificationRequest *request in self.sxiStackedNotificationRequests) {
+        request.sxiVisible = true;
     }
     
-    [listCollectionView openStack:self.bulletin.sectionID];
+    [listCollectionView sxiExpand:self.bulletin.sectionID];
 }
 
 
 %new
--(void)shrinkStack {
-    self.isExpanded = false;
+-(void)sxiCollapse {
+    self.sxiIsExpanded = false;
 
-    for (NCNotificationRequest *request in self.stackedNotificationRequests) {
-        request.shouldShow = false;
+    for (NCNotificationRequest *request in self.sxiStackedNotificationRequests) {
+        request.sxiVisible = false;
     }
     
-    [listCollectionView closeStack:self.bulletin.sectionID];
+    [listCollectionView sxiCollapse:self.bulletin.sectionID];
 }
 
 %end
@@ -192,7 +192,7 @@ static void fakeNotifications() {
 }
 
 %new
--(void)updateList {
+-(void)sxiUpdateList {
     [self.requests sortUsingComparator:(NSComparator)^(id obj1, id obj2){
         // TODO: improve sorting logic!
         // i.e. sort also by last date (some magic idk w/e)
@@ -212,7 +212,7 @@ static void fakeNotifications() {
 
     for (int i = 0; i < [self.requests count]; i++) {
         NCNotificationRequest *req = self.requests[i];
-        if (req.bulletin.sectionID && req.isExpanded && req.isStack) {
+        if (req.bulletin.sectionID && req.sxiIsExpanded && req.sxiIsStack) {
             expandedSection = req.bulletin.sectionID;
             break;
         }
@@ -220,50 +220,50 @@ static void fakeNotifications() {
 
     NSString *lastSection = nil;
     NCNotificationRequest *lastStack = nil;
-    NSUInteger num = 0;
+    NSUInteger sxiPositionInStack = 0;
 
     for (int i = 0; i < [self.requests count]; i++) {
         NCNotificationRequest *req = self.requests[i];
         if (req.bulletin.sectionID) {
-            [req.stackedNotificationRequests removeAllObjects];
-            req.isStack = false;
-            req.shouldShow = false;
-            req.isExpanded = false;
-            req.num = ++num;
+            [req.sxiStackedNotificationRequests removeAllObjects];
+            req.sxiIsStack = false;
+            req.sxiVisible = false;
+            req.sxiIsExpanded = false;
+            req.sxiPositionInStack = ++sxiPositionInStack;
 
             if ([expandedSection isEqualToString:req.bulletin.sectionID]) {
-                req.shouldShow = true;
+                req.sxiVisible = true;
             }
 
             if (!lastSection || ![lastSection isEqualToString:req.bulletin.sectionID]) {
                 lastSection = req.bulletin.sectionID;
                 lastStack = req;
 
-                req.shouldShow = true;
-                req.isStack = true;
-                req.num = 0;
-                num = 0;
+                req.sxiVisible = true;
+                req.sxiIsStack = true;
+                req.sxiPositionInStack = 0;
+                sxiPositionInStack = 0;
                 if ([expandedSection isEqualToString:req.bulletin.sectionID]) {
-                    req.isExpanded = true;
+                    req.sxiIsExpanded = true;
                 }
 
                 continue;
             }
 
             if (lastStack && [lastSection isEqualToString:req.bulletin.sectionID]) {
-                [lastStack insertNotificationRequest: req];
+                [lastStack sxiInsertRequest:req];
             }
         } else {
-            req.shouldShow = true;
-            req.isStack = true;
-            req.isExpanded = false;
-            req.num = 0;
+            req.sxiVisible = true;
+            req.sxiIsStack = true;
+            req.sxiIsExpanded = false;
+            req.sxiPositionInStack = 0;
         }
     }
 }
 
 -(NSUInteger)insertNotificationRequest:(NCNotificationRequest *)request {
-    request.shouldShow = true;
+    request.sxiVisible = true;
     [self.requests addObject:request];
     [listCollectionView reloadData];
     return 0;
@@ -302,12 +302,12 @@ static void fakeNotifications() {
 }
 
 -(void)viewWillAppear:(bool)animated {
-    [listCollectionView closeAll];
+    [listCollectionView sxiCollapseAll];
     %orig;
 }
 
 -(void)viewWillDisappear:(bool)animated {
-    [listCollectionView closeAll];
+    [listCollectionView sxiCollapseAll];
     %orig;
 }
 
@@ -336,13 +336,13 @@ static void fakeNotifications() {
 
     NCNotificationListCell* cell = %orig;
     
-    if (!cell.contentViewController.notificationRequest.shouldShow) {
-        if (cell.contentViewController.notificationRequest.num > 3) {
+    if (!cell.contentViewController.notificationRequest.sxiVisible) {
+        if (cell.contentViewController.notificationRequest.sxiPositionInStack > 3) {
             cell.hidden = YES; 
         } else {
             cell.hidden = NO;
             if (cell.frame.size.height != 50) {
-                cell.frame = CGRectMake(cell.frame.origin.x + (10 * cell.contentViewController.notificationRequest.num), cell.frame.origin.y - 50, cell.frame.size.width - (20 * cell.contentViewController.notificationRequest.num), 50);
+                cell.frame = CGRectMake(cell.frame.origin.x + (10 * cell.contentViewController.notificationRequest.sxiPositionInStack), cell.frame.origin.y - 50, cell.frame.size.width - (20 * cell.contentViewController.notificationRequest.sxiPositionInStack), 50);
             }
         }
     } else {
@@ -360,15 +360,15 @@ static void fakeNotifications() {
     CGSize orig = %orig;
     if (indexPath.section == 0) {
         NCNotificationRequest *request = [self.notificationPriorityList.requests objectAtIndex:indexPath.row];
-        if (!request.shouldShow) {
-            if (request.num > 3) {
+        if (!request.sxiVisible) {
+            if (request.sxiPositionInStack > 3) {
                 return CGSizeMake(orig.width,0);
             } else {
                 return CGSizeMake(orig.width,1);
             }
         }
 
-        if (request.isStack && !request.isExpanded && [request.stackedNotificationRequests count] > 0) {
+        if (request.sxiIsStack && !request.sxiIsExpanded && [request.sxiStackedNotificationRequests count] > 0) {
             return CGSizeMake(orig.width,orig.height + 15);
         }
     }
@@ -382,7 +382,7 @@ static void fakeNotifications() {
 
 -(void)layoutSubviews {
     /*//NSLog(@"[StackXI] SUBVIEWS!!!!");
-    if (self.contentViewController.notificationRequest.isStack && !self.contentViewController.notificationRequest.isExpanded) {
+    if (self.contentViewController.notificationRequest.sxiIsStack && !self.contentViewController.notificationRequest.sxiIsExpanded) {
         //NSLog(@"[StackXI] STACK CELL!!!!");
         [self.rightActionButtonsView.defaultActionButton setTitle: @"Clear All"];
         [self.rightActionButtonsView.defaultActionButton.titleLabel setText: @"Clear All"];
@@ -391,14 +391,14 @@ static void fakeNotifications() {
         [self.rightActionButtonsView.defaultActionButton.titleLabel setText: @"Clear"];
     }*/
     %orig;
-    if (!self.contentViewController.notificationRequest.isStack) {
+    if (!self.contentViewController.notificationRequest.sxiIsStack) {
         [listCollectionView sendSubviewToBack:self];
     }
 }
 
 -(void)cellClearButtonPressed:(id)arg1 {
-    if (self.contentViewController.notificationRequest.isStack && !self.contentViewController.notificationRequest.isExpanded) {
-        for (NCNotificationRequest *request in self.contentViewController.notificationRequest.stackedNotificationRequests) {
+    if (self.contentViewController.notificationRequest.sxiIsStack && !self.contentViewController.notificationRequest.sxiIsExpanded) {
+        for (NCNotificationRequest *request in self.contentViewController.notificationRequest.sxiStackedNotificationRequests) {
             [request.clearAction.actionRunner executeAction:request.clearAction fromOrigin:self withParameters:nil completion:nil];
         }
         
@@ -413,7 +413,7 @@ static void fakeNotifications() {
 
 %hook NCNotificationShortLookViewController
 
-%property (retain) UILabel* stackBadge;
+%property (retain) UILabel* sxiNotificationCount;
 %property (retain) UIButton* sxiClearAllButton;
 %property (retain) UIButton* sxiCollapseButton;
 
@@ -425,22 +425,22 @@ static void fakeNotifications() {
 
 -(void)viewWillAppear:(bool)whatever {
     %orig;
-    [self updateBadge];
+    [self sxiUpdateCount];
 }
 
 -(void)viewDidAppear:(bool)whatever {
     %orig;
-    [self updateBadge];
+    [self sxiUpdateCount];
 }
 
 -(void)viewDidLayoutSubviews {
-    [self updateBadge];
+    [self sxiUpdateCount];
     %orig;
 }
 
 %new
 -(void)sxiCollapse:(UIButton *)button {
-    [self.notificationRequest shrinkStack];
+    [self.notificationRequest sxiCollapse];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, TEMPDURATION * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         [listCollectionView reloadData];
     });
@@ -448,7 +448,7 @@ static void fakeNotifications() {
 
 %new
 -(void)sxiClearAll:(UIButton *)button {
-    for (NCNotificationRequest *request in self.notificationRequest.stackedNotificationRequests) {
+    for (NCNotificationRequest *request in self.notificationRequest.sxiStackedNotificationRequests) {
         [request.clearAction.actionRunner executeAction:request.clearAction fromOrigin:self withParameters:nil completion:nil];
     }
     
@@ -457,16 +457,16 @@ static void fakeNotifications() {
 }
 
 %new
--(void)updateBadge {
-    if (!self.stackBadge) {
-        self.stackBadge = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 21, 25)];
-        [self.stackBadge setFont:[UIFont systemFontOfSize:12]];
-        self.stackBadge.numberOfLines = 1;
-        self.stackBadge.clipsToBounds = YES;
-        self.stackBadge.hidden = YES;
-        self.stackBadge.alpha = 0.0;
-        self.stackBadge.textColor = [[UIColor blackColor] colorWithAlphaComponent:0.8];
-        [self.view addSubview:self.stackBadge];
+-(void)sxiUpdateCount {
+    if (!self.sxiNotificationCount) {
+        self.sxiNotificationCount = [[UILabel alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height, self.view.frame.size.width - 21, 25)];
+        [self.sxiNotificationCount setFont:[UIFont systemFontOfSize:12]];
+        self.sxiNotificationCount.numberOfLines = 1;
+        self.sxiNotificationCount.clipsToBounds = YES;
+        self.sxiNotificationCount.hidden = YES;
+        self.sxiNotificationCount.alpha = 0.0;
+        self.sxiNotificationCount.textColor = [[UIColor blackColor] colorWithAlphaComponent:0.8];
+        [self.view addSubview:self.sxiNotificationCount];
 
         if (showButtons) {
             self.sxiClearAllButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.frame.origin.x + self.view.frame.size.width - 165, self.view.frame.origin.y + 5, 75, 25)];
@@ -504,23 +504,23 @@ static void fakeNotifications() {
 
     NCNotificationShortLookView *lv = (NCNotificationShortLookView *)MSHookIvar<UIView *>(self, "_lookView");
     if (lv && [lv _notificationContentView] && [lv _notificationContentView].primaryLabel && [lv _notificationContentView].primaryLabel.textColor) {
-        self.stackBadge.textColor = [[lv _notificationContentView].primaryLabel.textColor colorWithAlphaComponent:0.8];
+        self.sxiNotificationCount.textColor = [[lv _notificationContentView].primaryLabel.textColor colorWithAlphaComponent:0.8];
     }
 
     if (lv) {
-        lv.customContentView.hidden = !self.notificationRequest.shouldShow;
-        [lv _headerContentView].hidden = !self.notificationRequest.shouldShow;
+        lv.customContentView.hidden = !self.notificationRequest.sxiVisible;
+        [lv _headerContentView].hidden = !self.notificationRequest.sxiVisible;
 
-        if (!self.notificationRequest.shouldShow) {
+        if (!self.notificationRequest.sxiVisible) {
             lv.alpha = 0.7;
         } else {
             lv.alpha = 1.0;
         }
     }
 
-    self.stackBadge.frame = CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 21, 25);
-    self.stackBadge.hidden = YES;
-    self.stackBadge.alpha = 0.0;
+    self.sxiNotificationCount.frame = CGRectMake(self.view.frame.origin.x + 11, self.view.frame.origin.y + self.view.frame.size.height - 30, self.view.frame.size.width - 21, 25);
+    self.sxiNotificationCount.hidden = YES;
+    self.sxiNotificationCount.alpha = 0.0;
 
     if (showButtons) {
         self.sxiClearAllButton.frame = CGRectMake(self.view.frame.origin.x + self.view.frame.size.width - 165, self.view.frame.origin.y + 5, 75, 25);
@@ -533,16 +533,16 @@ static void fakeNotifications() {
         self.sxiCollapseButton.alpha = 0.0;
     }
 
-    if ([NSStringFromClass([self.view.superview class]) isEqualToString:@"UIView"] && self.notificationRequest.isStack && [self.notificationRequest.stackedNotificationRequests count] > 0) {
-        if (!self.notificationRequest.isExpanded) {
-            self.stackBadge.hidden = NO;
-            self.stackBadge.alpha = 1.0;
+    if ([NSStringFromClass([self.view.superview class]) isEqualToString:@"UIView"] && self.notificationRequest.sxiIsStack && [self.notificationRequest.sxiStackedNotificationRequests count] > 0) {
+        if (!self.notificationRequest.sxiIsExpanded) {
+            self.sxiNotificationCount.hidden = NO;
+            self.sxiNotificationCount.alpha = 1.0;
 
-            int count = [self.notificationRequest.stackedNotificationRequests count];
+            int count = [self.notificationRequest.sxiStackedNotificationRequests count];
             if (count == 1) {
-                self.stackBadge.text = [NSString stringWithFormat:@"%d more notification", count];
+                self.sxiNotificationCount.text = [NSString stringWithFormat:@"%d more notification", count];
             } else {
-                self.stackBadge.text = [NSString stringWithFormat:@"%d more notifications", count];
+                self.sxiNotificationCount.text = [NSString stringWithFormat:@"%d more notifications", count];
             }
         } else if (showButtons) {
             self.sxiClearAllButton.hidden = NO;
@@ -553,17 +553,17 @@ static void fakeNotifications() {
         }
     }
 
-    [self.view bringSubviewToFront:self.stackBadge];
+    [self.view bringSubviewToFront:self.sxiNotificationCount];
 }
 
 - (void)_handleTapOnView:(id)arg1 {
     NSLog(@"[StackXI] tap");
     
-    if (self.notificationRequest.isStack && !self.notificationRequest.isExpanded) {
+    if (self.notificationRequest.sxiIsStack && !self.notificationRequest.sxiIsExpanded) {
         [UIView animateWithDuration:TEMPDURATION animations:^{
-            self.stackBadge.alpha = 0;
+            self.sxiNotificationCount.alpha = 0;
         }];
-        [self.notificationRequest expandStack];
+        [self.notificationRequest sxiExpand];
         return;
     }
 
@@ -582,7 +582,7 @@ static void fakeNotifications() {
 
 -(void)reloadData {
     %orig;
-    [priorityList updateList];
+    [priorityList sxiUpdateList];
     [self.collectionViewLayout invalidateLayout];
     [self setNeedsLayout];
     [self layoutIfNeeded];
@@ -592,19 +592,19 @@ static void fakeNotifications() {
 
         NCNotificationListCell* cell = (NCNotificationListCell*)c;
         [self sendSubviewToBack:cell];
-        [(NCNotificationShortLookViewController *)cell.contentViewController updateBadge];
+        [(NCNotificationShortLookViewController *)cell.contentViewController sxiUpdateCount];
     }
 }
 
 %new
--(void)closeAll {
+-(void)sxiCollapseAll {
     NSMutableOrderedSet *sectionIDs = [[NSMutableOrderedSet alloc] initWithCapacity:100];
 
     for (NCNotificationRequest *request in priorityList.requests) {
         if (!request.bulletin.sectionID) continue;
 
-        if (![sectionIDs containsObject:request.bulletin.sectionID] && request.isStack && request.isExpanded) {
-            [request shrinkStack];
+        if (![sectionIDs containsObject:request.bulletin.sectionID] && request.sxiIsStack && request.sxiIsExpanded) {
+            [request sxiCollapse];
             [sectionIDs addObject:request.bulletin.sectionID];
         }
     }
@@ -613,15 +613,15 @@ static void fakeNotifications() {
 }
 
 %new
--(void)openStack:(NSString *)sectionID {
+-(void)sxiExpand:(NSString *)sectionID {
     NSMutableOrderedSet *sectionIDs = [[NSMutableOrderedSet alloc] initWithCapacity:100];
     [sectionIDs addObject:sectionID];
 
     for (NCNotificationRequest *request in priorityList.requests) {
         if (!request.bulletin.sectionID) continue;
 
-        if (![sectionIDs containsObject:request.bulletin.sectionID] && request.isStack && request.isExpanded) {
-            [request shrinkStack];
+        if (![sectionIDs containsObject:request.bulletin.sectionID] && request.sxiIsStack && request.sxiIsExpanded) {
+            [request sxiCollapse];
             [sectionIDs addObject:request.bulletin.sectionID];
         }
     }
@@ -654,7 +654,7 @@ static void fakeNotifications() {
 }
 
 %new
--(void)closeStack:(NSString *)sectionID {
+-(void)sxiCollapse:(NSString *)sectionID {
     CGRect frame = CGRectMake(0,0,0,0);
     bool frameFound = false;
     for (NSInteger row = 0; row < [self numberOfItemsInSection:0]; row++) {
@@ -713,7 +713,7 @@ static void fakeNotifications() {
 
 static void displayStatusChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
     if (listCollectionView) {
-        [listCollectionView closeAll];
+        [listCollectionView sxiCollapseAll];
     }
 }
 

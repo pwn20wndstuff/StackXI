@@ -565,7 +565,7 @@
 -(void)_configureHeaderContentView;
 -(id)_newNotificationContentView;
 -(void)_layoutGrabber;
--(BOOL)_shouldShowGrabber;
+-(BOOL)_sxiVisibleGrabber;
 -(id)_grabberView;
 
 -(void)moveUpBy:(int)y view:(UIView *)view;
@@ -599,16 +599,16 @@
 @interface NCNotificationRequest : NSObject
 
 @property (nonatomic,copy,readonly) BBBulletin* bulletin;
-@property (assign,nonatomic) bool isStack;
-@property (assign,nonatomic) bool isExpanded;
-@property (assign,nonatomic) bool shouldShow;
-@property (assign,nonatomic) NSUInteger num;
-@property (nonatomic,retain) NSMutableOrderedSet *stackedNotificationRequests;
+@property (assign,nonatomic) bool sxiIsStack;
+@property (assign,nonatomic) bool sxiIsExpanded;
+@property (assign,nonatomic) bool sxiVisible;
+@property (assign,nonatomic) NSUInteger sxiPositionInStack;
+@property (nonatomic,retain) NSMutableOrderedSet *sxiStackedNotificationRequests;
 @property (nonatomic,readonly) NCNotificationAction* clearAction; 
 
--(void)insertNotificationRequest:(NCNotificationRequest *)request;
--(void)expandStack;
--(void)shrinkStack;
+-(void)sxiInsertRequest:(NCNotificationRequest *)request;
+-(void)sxiExpand;
+-(void)sxiCollapse;
 
 @end
 
@@ -620,7 +620,7 @@
 
 
 @interface NCNotificationShortLookViewController : NCNotificationViewController
-@property (nonatomic, retain) UILabel* stackBadge;
+@property (nonatomic, retain) UILabel* sxiNotificationCount;
 @property (nonatomic, retain) UIButton* sxiClearAllButton;
 @property (nonatomic, retain) UIButton* sxiCollapseButton;
 
@@ -629,7 +629,7 @@
 -(id)initWithNotificationRequest:(id)arg1 ;
 -(void)_setupStaticContentProvider;
 -(void)_updateWithProvidedStaticContent;
--(void)updateBadge;
+-(void)sxiUpdateCount;
 -(void)sxiCollapse:(UIButton *)button;
 -(void)sxiClearAll:(UIButton *)button;
 
@@ -669,7 +669,7 @@
 -(id)requestAtIndex:(unsigned long long)arg1 ;
 -(void)setRequests:(NSMutableOrderedSet*)arg1 ;
 -(id)init;
--(void)updateList;
+-(void)sxiUpdateList;
 -(unsigned long long)count;
 -(id)allNotificationRequests;
 -(bool)containsNotificationRequestMatchingRequest:(id)arg1 ;
@@ -694,9 +694,9 @@
 -(id)_visibleCellForIndexPath:(id)arg1 ;
 -(unsigned long long)_updateVisibleCellsNow:(BOOL)arg1 ;
 -(void)_setNeedsVisibleCellsUpdate:(BOOL)arg1 withLayoutAttributes:(BOOL)arg2 ;
--(void)openStack:(NSString *)sectionID;
--(void)closeStack:(NSString *)sectionID;
--(void)closeAll;
+-(void)sxiExpand:(NSString *)sectionID;
+-(void)sxiCollapse:(NSString *)sectionID;
+-(void)sxiCollapseAll;
 
 @end
 
