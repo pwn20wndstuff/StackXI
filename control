@@ -1,7 +1,7 @@
 Package: io.ominousness.stackxi
 Name: StackXI
 Depends: mobilesubstrate, ws.hbang.common (>= 1.11)
-Version: 0.1.1
+Version: 0.2.0
 Architecture: iphoneos-arm
 Description: Grouped notifications, iOS 12 style.
 Maintainer: Ominousness
