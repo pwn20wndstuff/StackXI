@@ -1,9 +1,10 @@
 Package: io.ominousness.stackxi
 Name: StackXI
-Depends: mobilesubstrate, ws.hbang.common (>= 1.11)
-Version: 0.2.0
+Depends: mobilesubstrate, ws.hbang.common (>= 1.11), firmware (>= 11.0), firmware (<< 11.4.1), cy+cpu.arm64
+Conflicts: ch.mdaus.palette, com.ioscreatix.intelix, com.ioscreatix.intelixbeta, com.macciti.lockplus, com.junesiphone.lockpluspro, xyz.royalapps.priority
+Version: 0.2.1
 Architecture: iphoneos-arm
 Description: Grouped notifications, iOS 12 style.
-Maintainer: Ominousness
-Author: Ominousness
+Maintainer: Ominousness <ominousness@protonmail.com>
+Author: Ominousness <ominousness@protonmail.com>
 Section: Tweaks
